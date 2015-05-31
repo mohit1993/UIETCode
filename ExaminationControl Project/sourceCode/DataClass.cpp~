@@ -1,0 +1,430 @@
+#include <iostream>
+#include <string>
+#include <cstdlib>
+#include <vector>
+#include <iomanip>
+#include <fstream>
+
+using std::cout;
+using std::cin;
+using std::string;
+using std::vector;
+using std::endl;
+using std::setw;
+using std::setfill;
+using std::ios;
+using std::ofstream;
+using std::ifstream;
+using std::getline;
+
+class SubjectData
+{
+	public:
+		SubjectData()
+		{
+			subjectName = "\0";
+			subjectCode = "\0";
+			credits = 0;
+			optional = 0;
+		}
+
+		SubjectData(ifstream &file)
+		{
+			file>>subjectName;
+			file>>subjectCode;
+			file>>optional;
+			file>>credits;
+		}
+
+		void saveData(ofstream &file)
+		{
+			//file<<subjectName.size()<<" ";
+			file<<subjectName<<" ";
+			//file<<subjectCode.size()<<" ";
+			file<<subjectCode<<" ";
+			file<<optional<<" ";
+			file<<credits<<" ";
+		}
+
+		SubjectData(string& name,string& code,int cr,bool opt):subjectName(name),subjectCode(code),credits(cr),optional(opt){}
+		
+		void fillSubject(void)
+		{
+			char c;
+			cout<<"\nEnter Subject Name: ";
+			cin>>subjectName;
+			cout<<"\nEnter Subject Code: ";
+			cin>>subjectCode;
+			do
+			{
+				cout<<"\nEnter credits: ";
+				cin>>credits;
+			}while(credits < 0 || credits > 5);
+			cout<<"\nIs it Optional(y/n): ";
+			cin>>c;
+			if(c == 'y' || c == 'Y')
+				optional = 1;
+			else
+				optional = 0;
+		}
+		string getSubjectName(void)
+		{
+			return subjectName;
+		}
+		string getSubjectCode(void)
+		{
+			return subjectCode;
+		}
+		int getCredits(void)
+		{
+			return credits;
+		}
+		bool getOptionalInfo(void)
+		{
+			return optional;
+		}
+
+		void display()
+		{
+			cout<<" "<<setw(26)<<subjectName;
+			cout<<" "<<setw(5)<<setfill(' ');
+			cout<<" "<<setw(5)<<subjectCode;
+			cout<<" "<<setw(10)<<setfill(' ');
+			cout<<" "<<setw(3)<<optional;
+		}
+
+		
+	private:
+		string subjectName;
+		string subjectCode;
+		bool optional;
+		int credits;
+};
+
+class SemesterData
+{
+	public:
+		SemesterData()
+		{
+			numberOfSubjects = 0;
+		}
+		SemesterData(ifstream &file)
+		{
+			file>>numberOfSubjects;
+			for(int i=0;i<numberOfSubjects;i++)
+			{
+				subjects.push_back(SubjectData(file));
+			}
+		}
+		void insertNewSubject()
+		{
+			string name,code;
+			int credit;
+			char ch;
+			bool opt;
+			cout<<"\nEnter name of the subject:";
+			cin.ignore();
+			getline(cin,name);
+			cout<<"\nEnter subject code: ";
+			cin>>code;
+			cout<<"\nCredits: ";
+			cin>>credit;
+			cout<<"\nOptional (y/n) :";
+			cin>>ch;
+			if(ch == 'y' || ch == 'Y')
+				opt = 1;
+			else
+				opt = 0;
+			subjects.push_back(SubjectData(name,code,credit,opt));
+			numberOfSubjects += 1;
+		}
+
+		void display()
+		{
+			int i=0;
+			for(i=0;i<numberOfSubjects;i++)
+			{
+				subjects[i].display();
+				if(i<numberOfSubjects-1)
+					cout<<" "<<setw(80)<<setfill(' ');
+				cout<<endl;
+			}
+		}
+
+		void saveData(ofstream &file)
+		{
+			file<<numberOfSubjects<<" ";
+			for(int i = 0;i<numberOfSubjects;i++)
+			{
+				subjects[i].saveData(file);
+			}
+		}
+	private:
+		int numberOfSubjects;
+		vector<SubjectData> subjects;
+};
+
+class BranchData
+{
+	public:
+		BranchData(string& name):branchName(name),currentSemester(0){}
+
+		BranchData(ifstream &file)
+		{
+			file>>branchName;
+			file>>currentSemester;
+			for(int i=0;i<currentSemester;i++)
+			{
+				semesters.push_back(SemesterData(file));
+			}
+		}
+
+		void insertSemester()
+		{
+			int nos;
+			cout<<"\nEnter Number of subjects: ";
+			cin>>nos;
+			semesters.push_back(SemesterData());
+			currentSemester += 1;
+			for(int i=0;i<nos;i++)
+			{
+				cout<<"\nDetails for subject "<<i+1;
+				semesters[currentSemester-1].insertNewSubject();
+				cout<<endl;
+			}
+		}
+
+		void insertNewSubject(int sem)
+		{
+			semesters[sem].insertNewSubject();
+		}
+		void display()
+		{
+			cout<<" "<<setw(23)<<branchName;
+			for(int i=0;i<currentSemester;i++)
+			{
+				cout<<" "<<i+1;
+				cout<<" "<<setw(22)<<setfill(' ');
+				semesters[i].display();
+				if(i<currentSemester-1)
+					cout<<" "<<setw(55)<<setfill(' ');
+				//cout<<"\n"<<setw(11)<<"\t"<<setw(11)<<"\t"<<setw(11)<<"\t";
+			}
+		}
+
+		void showName()
+		{
+			cout<<branchName;
+		}
+
+		void saveData(ofstream &file)
+		{
+			//file<<branchName.size()<<" ";
+			file<<branchName<<" ";
+			file<<currentSemester<<" ";
+			for(int i=0;i<currentSemester;i++)
+				semesters[i].saveData(file);
+		}
+
+	private:
+		vector<SemesterData> semesters;
+		int currentSemester;
+		string branchName;
+};
+
+class CollegeData
+{
+	public:
+		CollegeData()
+		{
+			cout<<"\nEnter Name of the college: ";
+			cin>>collegeName;
+			numberOfBranches = 0;
+		}
+		CollegeData(string& name):collegeName(name),numberOfBranches(0){}
+
+		CollegeData(ifstream &file)
+		{
+			file>>collegeName;
+			file>>numberOfBranches;
+			for(int i=0;i<numberOfBranches;i++)
+			{
+				branches.push_back(BranchData(file));
+			}
+		}
+
+		void newBranch()
+		{
+			string branchname;
+			cout<<"\nEnter Name of the branch: ";
+			cin>>branchname;
+			branches.push_back(BranchData(branchname));
+			numberOfBranches += 1;
+			//int index = branches.size() -  1;
+			//branches[index].insertSemester();
+		}
+
+		void display()
+		{
+			cout<<""<<setw(23)<<collegeName;
+			for(int i=0;i<numberOfBranches;i++)
+			{
+				branches[i].display();
+				cout<<endl;
+				if(i<numberOfBranches-1)
+				cout<<" "<<setw(31)<<setfill(' ');
+			}
+		}
+		void showCollegeName()
+		{
+			cout<<collegeName;
+		}
+
+		int getNumberOfBranches()
+		{
+			return numberOfBranches;
+		}
+
+		void showBranchName(int i)
+		{
+			branches[i].showName();
+		}
+
+		void newSemester(int i)
+		{
+			branches[i].insertSemester();
+		}
+
+		void newSubject(int branch,int sem)
+		{
+			branches[branch].insertNewSubject(sem);
+		}
+
+		void saveData(ofstream &file)
+		{	
+			//file<<collegeName.size()<<" ";
+			file<<collegeName<<" ";
+			file<<numberOfBranches<<" ";
+			for(int i=0;i<numberOfBranches;i++)
+				branches[i].saveData(file);
+		}
+
+	private:
+		string collegeName;
+		int numberOfBranches;
+		vector<BranchData> branches;
+};
+
+int main()
+{
+	int n,b,no;
+	char ch = 'y';
+	vector<CollegeData> college;
+	ifstream data;
+	data.open("DataBasebak.txt",ios::in);
+	int numberOfCollege;
+	data>>numberOfCollege;
+	for(int i=0;i<numberOfCollege;i++)
+	{
+		college.push_back(CollegeData(data));
+	}
+	data.close();
+
+	do
+	{
+		cout<<"\n1. New College ";
+		cout<<"\n2. New Branch ";
+		cout<<"\n3. New Semester";
+		cout<<"\n4. New Subject";
+		cout<<"\n5. Display";
+		cout<<"\nEnter Choice: ";
+		cin>>n;
+		switch(n)
+		{
+			case 1: college.push_back(CollegeData());
+					cout<<"\nCollege added Successfully";
+					break;
+
+			case 2: system("clear");
+					for(int i=0;i<(int)college.size();i++)
+					{
+						cout<<"\n"<<i+1<<". ";
+						college[i].showCollegeName();
+					}
+					cout<<"\nSelect College: ";
+					cin>>n;
+					college[n-1].newBranch();
+					cout<<"\nBranch Inserted successfully";
+					break;
+			case 3: system("clear");
+					for(int i=0;i<(int)college.size();i++)
+					{
+						cout<<"\n"<<i+1<<". ";
+						college[i].showCollegeName();
+					}
+					cout<<"\nSelect College: ";
+					cin>>n;
+					for(int i=0;i<college[n-1].getNumberOfBranches();i++)
+					{
+						cout<<"\n"<<i+1<<". ";
+						college[n-1].showBranchName(i);
+					}
+					cout<<"\nSelect Branch: ";
+					cin>>b;
+					college[n-1].newSemester(b-1);
+					cout<<"\nInsertion of semester successfull";
+					break;
+
+			case 4: system("clear");
+					for(int i=0;i<(int)college.size();i++)
+					{
+						cout<<"\n"<<i+1<<". ";
+						college[i].showCollegeName();
+					}
+					cout<<"\nSelect College: ";
+					cin>>n;
+					for(int i=0;i<college[n-1].getNumberOfBranches();i++)
+					{
+						cout<<"\n"<<i+1<<". ";
+						college[n-1].showBranchName(i);
+					}
+					cout<<"\nSelect Branch: ";
+					cin>>b;
+					cout<<"\nEnter Semester Number: ";
+					cin>>no;
+					college[n-1].newSubject(b-1,no-1);
+					cout<<"\nSuccessfully added new subject";
+					break;	
+
+			case 5: system("clear");
+					cout<<"\nS.no\tCollegeName\t\tBranchName\t\tSemester_No.\t\tSubjectName\t\t\tSubjectCode\tOptional\n";
+					
+					for(int i=0;i<(int)college.size();i++)
+					{
+						cout<<setw(123)<<setfill('-');
+						cout<<""<<setfill(' ');
+						cout<<std::left;
+						cout<<endl<<" "<<i+1;
+						cout<<""<<setw(6)<<setfill(' ');
+						college[i].display();
+					}
+					cout<<endl<<setw(123)<<setfill('-')<<"";
+					cout<<endl<<endl;
+					break;
+			default: cout<<"\nInvalid option ";
+					break;
+		}
+		cout<<"\nWish do more: ";
+		cin>>ch;
+	}while(ch != 'N' && ch != 'n');
+
+	ofstream file;
+	file.open("DataBase.txt",ios::out);
+	file<<college.size()<<" ";
+	for(int i=0;i<(int)college.size();i++)
+	{
+		college[i].saveData(file);
+	}
+	file.close();
+return 0;
+}

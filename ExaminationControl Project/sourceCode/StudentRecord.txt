@@ -1,0 +1,1 @@
+160 2015 ue133061 13uit168 17 Mohit Kumar Goyal 21 Sh. Vinod Kumar Goyal 19 Shmt. Santosh Goyal 39 House No. 200, Sector 15-A, Chandigarh. 9646774646 mohitgoyal707@gmail.com 1 13 10 1993 UIET CSE 2 1 10 3 OOP CS414 4 90 10 DBMS CS410 4 90 10 English AS101 2 90 10 2 10 3 DS CS310 3 90 10 ADA CS410 3 90 10 CyberLaw AS310 2 90 10 10 
